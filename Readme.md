@@ -29,6 +29,6 @@ In the following `<Xn>...` denotes a comma separeted sequence of numbers.
   - `csv`: each row is an individual samples
 - `-n<num>` `--number <num>`: the number of generated samples (default: `128`)
 - `-s<n>`: the significant digits in the final output.
-- `--transform (<tmn>...)`: the transformation matrix applied to all the samples. The parenthesized argments `<tmn>` are the entries of the matrix in the row-major order which has (d+1) columns if the samples are in dimension d.
+- `--transform (<tmn>...)`: the transformation matrix applied to all the samples. The parenthesized arguments `<tmn>` are the entries of the matrix in the row-major order which has (d+1) columns if the samples are in dimension d.
 
 
