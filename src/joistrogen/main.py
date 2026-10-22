@@ -127,19 +127,15 @@ def run(args) -> int:
     variances = np.var(samples, axis=0, ddof=1)
     correlations = np.corrcoef(samples, rowvar=False)
 
-    mean_text = "Mean per coordinate:\n[" + ", ".join(format_float(float(v), args.sig_figs) for v in means) + "]"
-    variance_text = (
-        "Variance per coordinate:\n"
-        + "["
-        + ", ".join(format_float(float(v), args.sig_figs) for v in variances)
-        + "]"
-    )
+    print(f"Mean: [{', '.join(format_float(float(v), args.sig_figs) for v in means)}]")
+    print(f"Variance: [{', '.join(format_float(float(v), args.sig_figs) for v in variances)}]")
+    print("Correlation matrix:")
     correlation_rows = [
-        "[" + ", ".join(format_float(float(x), args.sig_figs) for x in row) + "]"
+        f"[{', '.join(format_float(float(x), args.sig_figs) for x in row)}]"
         for row in correlations
     ]
-    correlation_text = "Correlation matrix:\n" + "\n".join(correlation_rows)
-    print(mean_text + "\n" + variance_text + "\n" + correlation_text)
+    for row in correlation_rows:
+        print(row)
     return 0
 
 

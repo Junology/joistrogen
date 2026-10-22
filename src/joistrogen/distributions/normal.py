@@ -1,8 +1,18 @@
-from typing import Iterable, Optional, Sequence
+import re
+from typing import Optional, Sequence
 
 import numpy as np
 
 from .base import DistributionSampler
+
+
+def _split_values(raw: str | None) -> list[str]:
+    if raw is None:
+        return []
+    text = raw.strip()
+    if not text:
+        return []
+    return [part for part in re.split(r"[\s,]+", text) if part]
 
 
 class JointNormalSampler(DistributionSampler):
@@ -16,6 +26,23 @@ class JointNormalSampler(DistributionSampler):
         self._covariance = self._reconstruct_covariance(covariance)
         if self._covariance.shape[0] != self._mean.size:
             raise ValueError("Covariance dimension does not match the mean vector dimension.")
+
+    @classmethod
+    def from_arguments(cls, arguments: str) -> "JointNormalSampler":
+        parts = [segment.strip() for segment in arguments.split(";")]
+        if len(parts) != 2:
+            raise ValueError("N(...) expects two semicolon-separated argument groups: mean;covariance.")
+        mean_values = _split_values(parts[0])
+        covariance_values = _split_values(parts[1])
+        if not mean_values:
+            raise ValueError("Mean vector in N(...) must not be empty.")
+        d = len(mean_values)
+        expected = d * (d + 1) // 2
+        if len(covariance_values) != expected:
+            raise ValueError(
+                f"N(...) covariance requires {expected} values for dimension {d}, got {len(covariance_values)}."
+            )
+        return cls(mean_values, covariance_values)
 
     @property
     def dimension(self) -> int:

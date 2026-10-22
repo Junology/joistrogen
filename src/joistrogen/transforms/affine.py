@@ -1,7 +1,31 @@
+import re
+
 import numpy as np
 
-from ..cli.grammar import parse_transform
 from .base import Transformer
+
+
+def _split_values(raw: str) -> list[str]:
+    text = raw.strip()
+    if not text:
+        return []
+    return [part for part in re.split(r"[\s,]+", text) if part]
+
+
+def _parse_transform_spec(spec: str, dimension: int) -> list[float]:
+    text = spec.strip()
+    if not text.startswith("(") or not text.endswith(")"):
+        raise ValueError("Transform specification must be enclosed in parentheses, e.g. (1, 0, 0, 1).")
+    values = _split_values(text[1:-1])
+    if not values:
+        raise ValueError("Transform specification cannot be empty.")
+    parsed = [float(value) for value in values]
+    if len(parsed) % (dimension + 1) != 0:
+        raise ValueError(
+            f"Affine transform entries must be a multiple of (d + 1) = {dimension + 1}. "
+            f"Got {len(parsed)} entries."
+        )
+    return parsed
 
 
 class AffineTransformer(Transformer):
@@ -22,7 +46,7 @@ class AffineTransformer(Transformer):
 
     @classmethod
     def from_spec(cls, spec: str, dimension: int):
-        entries = parse_transform(spec, dimension)
+        entries = _parse_transform_spec(spec, dimension)
         return cls(entries, dimension)
 
     @property

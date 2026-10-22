@@ -1,9 +1,19 @@
+import re
 from typing import Optional, Sequence
 
 import numpy as np
 from scipy import stats
 
 from .base import DistributionSampler
+
+
+def _split_values(raw: str | None) -> list[str]:
+    if raw is None:
+        return []
+    text = raw.strip()
+    if not text:
+        return []
+    return [part for part in re.split(r"[\s,]+", text) if part]
 
 
 class GaussianCopulaSampler(DistributionSampler):
@@ -23,6 +33,26 @@ class GaussianCopulaSampler(DistributionSampler):
         self._correlation = self._reconstruct_correlation(correlation)
         if self._correlation.shape[0] != self._a.size:
             raise ValueError("Correlation matrix dimension does not match the interval bounds dimension.")
+
+    @classmethod
+    def from_arguments(cls, arguments: str) -> "GaussianCopulaSampler":
+        parts = [segment.strip() for segment in arguments.split(";")]
+        if len(parts) != 3:
+            raise ValueError("GC(...) expects three semicolon-separated argument groups: a;b;correlation.")
+        a_values = _split_values(parts[0])
+        b_values = _split_values(parts[1])
+        corr_values = _split_values(parts[2])
+        if not a_values or not b_values:
+            raise ValueError("GC(...) interval bounds must not be empty.")
+        if len(a_values) != len(b_values):
+            raise ValueError("GC(...) lower and upper bounds must have the same length.")
+        d = len(a_values)
+        expected = d * (d - 1) // 2
+        if len(corr_values) != expected:
+            raise ValueError(
+                f"GC(...) correlation requires {expected} values for dimension {d}, got {len(corr_values)}."
+            )
+        return cls(a_values, b_values, corr_values)
 
     @property
     def dimension(self) -> int:
